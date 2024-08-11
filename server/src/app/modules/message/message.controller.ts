@@ -6,11 +6,7 @@ import { MessageServices } from "./message.service";
 
 const createMessage = catchAsync(async (req, res, next) => {
   const messageData = req.body;
-  const receiverId = req.params.receiverId;
-  const result = await MessageServices.createMessageIntoDB(
-    messageData,
-    receiverId
-  );
+  const result = await MessageServices.createMessageIntoDB(messageData);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

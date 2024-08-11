@@ -96,8 +96,8 @@ export default function ChatSidebar() {
       </div>
       <form className="relative">
         <input
-          onFocus={() => handleOnFocus()}
-          onBlur={() => handleOnBlur()}
+          // onFocus={() => handleOnFocus()}
+          // onBlur={() => handleOnBlur()}
           onChange={handleOnChage}
           id="search"
           className="border w-full mt-4 py-2 px-4 rounded outline-none"

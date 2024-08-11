@@ -6,7 +6,7 @@ export const messageApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     sendMessage: builder.mutation({
       query: (payload) => ({
-        url: `/messages/${payload.receiverId}`,
+        url: `/messages`,
         method: "POST",
         body: payload.messageData,
       }),
@@ -71,18 +71,43 @@ export const messageApi = baseApi.injectEndpoints({
             )
           );
         } catch (error) {
-          getAllConversationPatchResult.undo();
-          getConversationPatchResult.undo();
+          getAllConversationPatchResult?.undo();
+          getConversationPatchResult?.undo();
           toast.error("Internal server error");
         }
       },
       invalidatesTags: ["Conversation"],
     }),
     deleteMessage: builder.mutation({
-      query: (id) => ({
-        url: `/messages/${id}`,
+      query: (payload) => ({
+        url: `/messages/${payload._id}`,
         method: "DELETE",
       }),
+      async onQueryStarted(payload, { queryFulfilled, dispatch }) {
+        // let getConversationPatchResult;
+        try {
+          await queryFulfilled;
+
+          // Update messages cache
+          dispatch(
+            conversationApi.util.updateQueryData(
+              "getConversation",
+              payload.conversationId,
+              (draft) => {
+                const findDeleteForEveryoneMessage = draft.data.messages.find(
+                  (message) => message._id == payload._id
+                );
+                if (findDeleteForEveryoneMessage) {
+                  findDeleteForEveryoneMessage.isDeleted = true;
+                }
+                return draft;
+              }
+            )
+          );
+        } catch (error) {
+          toast.error("Internal server error");
+        }
+      },
     }),
   }),
 });

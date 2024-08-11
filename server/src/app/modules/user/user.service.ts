@@ -3,6 +3,8 @@ import config from "../../config";
 import { TUser } from "./user.interface";
 import bcrypt from "bcryptjs";
 import { User } from "./user.model";
+import AppError from "../../errors/AppError";
+import httpStatus from "http-status";
 const { ObjectId } = mongoose.Types;
 
 const createUserIntoDB = async (payload: TUser) => {
@@ -21,7 +23,23 @@ const getUsersFromDB = async (userId: string) => {
   return result;
 };
 
+const updateUserIntoDB = async (userId: string) => {
+  const isUserExist = await User.findById(userId);
+  if (!isUserExist) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User does not exist!");
+  }
+  const now = new Date();
+  const timestamp = now.toISOString();
+  const result = await User.findByIdAndUpdate(
+    userId,
+    { lastSeen: timestamp },
+    { new: true }
+  );
+  return result;
+};
+
 export const userServices = {
   createUserIntoDB,
   getUsersFromDB,
+  updateUserIntoDB,
 };

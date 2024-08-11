@@ -11,6 +11,7 @@ export function initializeSocket(server: HTTPServer): SocketIOServer {
       methods: ["GET", "POST"],
     },
   });
+
   io.on("connection", (socket) => {
     console.log("New connection");
 
@@ -21,6 +22,14 @@ export function initializeSocket(server: HTTPServer): SocketIOServer {
         (user) => user._id === data.receiverId
       );
       socket.to(findUser?.socketId as string).emit("message", data);
+    });
+
+    socket.on("deleteForEveryone", (data) => {
+      const findUser = activeUsers?.find(
+        (user) => user._id === data.receiverId
+      );
+      console.log(findUser);
+      socket.to(findUser?.socketId as string).emit("deleteForEveryone", data);
     });
 
     socket.on("conversation", (data) => {
@@ -42,7 +51,7 @@ export function initializeSocket(server: HTTPServer): SocketIOServer {
 
     // Add your socket event listeners here
     socket.on("disconnect", () => {
-      console.log("User disconnected");
+      // console.log("User disconnected");
     });
   });
 

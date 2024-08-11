@@ -1,7 +1,22 @@
+import { useEffect } from "react";
 import ChatBox from "../components/chatBox/ChatBox";
 import ChatSidebar from "../components/ChatSidebar";
+import { socket } from "../socket";
 
 export default function ChatPage() {
+  // socket listener
+  useEffect(() => {
+    const handleDisconnect = (data) => {
+      console.log(data);
+    };
+
+    socket.on("disconnectUser", handleDisconnect);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      socket.off("disconnectUser", handleDisconnect);
+    };
+  }, []);
   return (
     <div className=" w-[1300px] mx-auto flex ">
       <div className="w-[30%] h-screen bg-[#f5f1f1]">

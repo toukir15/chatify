@@ -14,18 +14,35 @@ export default function ChatFooter({
 }) {
   const [message, setMessage] = useState("");
   const user = useSelector((state) => state.auth.user);
+  const editMessage = useSelector((state) => state.message.editMessage);
   const dispatch = useDispatch();
   const [sendMessage] = useSendMessageMutation();
   const reciverProfile = conversationData?.data.reciverProfile;
-  const [messageEditData, setMessageEditData] = useState({
-    text: "how are you",
-  });
+
+  // Update message state when editMessage changes
+  useEffect(() => {
+    if (editMessage) {
+      setMessage(editMessage.text || "");
+    } else {
+      setMessage("");
+    }
+  }, [editMessage]);
+
   const handleAddNewSendMessage = async (e) => {
     e.preventDefault();
     const messageText = e.target.message.value;
     const messageData = {
       senderId: user._id,
       text: messageText,
+      receiverId: reciverProfile._id,
+      isSeen: {
+        [user._id]: false,
+        [reciverProfile._id]: false,
+      },
+      isRemove: {
+        [user._id]: false,
+        [reciverProfile._id]: false,
+      },
     };
     const receiverId = conversationUser._id;
     const response = await sendMessage({
@@ -36,7 +53,7 @@ export default function ChatFooter({
     const resConversationId = response.data.conversationId;
     dispatch(setConversationId(resConversationId));
     dispatch(setConversationUser(null));
-    e.target.message.value = "";
+    setMessage("");
   };
 
   const handleExistingSendMessage = async (e) => {
@@ -44,7 +61,16 @@ export default function ChatFooter({
     const messageText = e.target.message.value;
     const messageData = {
       senderId: user._id,
+      receiverId: reciverProfile._id,
       text: messageText,
+      isSeen: {
+        [user._id]: false,
+        [reciverProfile._id]: false,
+      },
+      isRemove: {
+        [user._id]: false,
+        [reciverProfile._id]: false,
+      },
     };
     const now = new Date();
     const timestamp = now.toISOString();
@@ -54,7 +80,7 @@ export default function ChatFooter({
       receiverId,
       conversationId,
     });
-    if (response.data.success) {
+    if (response.data?.success) {
       socket.emit("message", { ...messageData, receiverId, timestamp });
       socket.emit("conversation", {
         ...messageData,
@@ -64,7 +90,7 @@ export default function ChatFooter({
       });
       socket.emit("typing", { id: reciverProfile._id, isTyping: false });
     }
-    e.target.message.value = "";
+    setMessage("");
   };
 
   useEffect(() => {
@@ -78,14 +104,15 @@ export default function ChatFooter({
 
   return (
     <div>
-      {/*add new send message  */}
+      {/* Add new send message */}
       {conversationUser && !conversationId && (
         <form
           onSubmit={handleAddNewSendMessage}
-          className="pl-4 flex gap-3 relative "
+          className="pl-4 flex gap-3 relative"
         >
           <input
             onChange={(e) => setMessage(e.target.value)}
+            value={message} // Use controlled input
             type="text"
             required
             name="message"
@@ -98,14 +125,36 @@ export default function ChatFooter({
         </form>
       )}
 
-      {/* existing send message  */}
-      {conversationId && !conversationUser && (
+      {/* Existing send message */}
+      {conversationId && !conversationUser && !editMessage && (
         <form
           onSubmit={handleExistingSendMessage}
-          className="pl-4 flex gap-3 relative "
+          className="pl-4 flex gap-3 relative"
         >
           <input
             onChange={(e) => setMessage(e.target.value)}
+            value={message} // Use controlled input
+            type="text"
+            required
+            name="message"
+            placeholder="Type a message"
+            className="border w-full py-3 rounded pl-4 outline-none text-sm"
+          />
+          <button className="absolute right-3 top-0 translate-y-1 text-[22px] text-gray-500 px-3 py-2 hover:bg-gray-100 transition-all ">
+            <LuSendHorizonal />
+          </button>
+        </form>
+      )}
+
+      {/* Edit send message */}
+      {editMessage && (
+        <form
+          onSubmit={handleExistingSendMessage}
+          className="pl-4 flex gap-3 relative"
+        >
+          <input
+            onChange={(e) => setMessage(e.target.value)}
+            value={message} // Use controlled input
             type="text"
             required
             name="message"

@@ -23,10 +23,26 @@ export const users = (socket: Socket) => {
   socket.on("disconnect", () => {
     const index = activeUsers.findIndex((user) => user.socketId === socket.id);
     if (index !== -1) {
+      const removeUser = activeUsers[index];
+      socket.to(removeUser.socketId).emit("disconnectUser", removeUser);
       activeUsers.splice(index, 1);
+      if (removeUser) {
+        fetch("http://localhost:5000/api/v1/users", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id: removeUser._id }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              activeUsers.forEach((activeUser) => {
+                socket.to(activeUser.socketId).emit("online", activeUsers);
+              });
+            }
+          });
+      }
     }
-    activeUsers.forEach((activeUser) => {
-      socket.to(activeUser.socketId).emit("online", activeUsers);
-    });
   });
 };

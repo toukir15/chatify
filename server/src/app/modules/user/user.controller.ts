@@ -26,7 +26,19 @@ const getUsers = catchAsync(async (req, res, next) => {
   });
 });
 
+const updateUser = catchAsync(async (req, res, next) => {
+  const userId = req.body.id;
+  const result = await userServices.updateUserIntoDB(userId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Users retrived successfully!",
+    data: result,
+  });
+});
+
 export const UserControllers = {
   createUser,
   getUsers,
+  updateUser,
 };

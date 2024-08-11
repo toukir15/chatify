@@ -17,6 +17,7 @@ export default function ChatBox() {
   const conversationUser = useSelector((state) => state.user.conversationUser);
   const { data: conversationData, isLoading: isConversationDataLoading } =
     useGetConversationQuery(conversationId);
+  const [socketMessage, setSocketMessage] = useState(null);
 
   const reciverProfile = conversationData?.data.reciverProfile;
   const findOnlineReciverProfile = socketOnlineUsers.find(
@@ -32,6 +33,13 @@ export default function ChatBox() {
     const handleTyping = (data) => {
       setIsTyping(data.isTyping);
     };
+    const handleMessage = (data) => {
+      setSocketMessage(data);
+    };
+
+    const handleDisconnect = (data) => {
+      console.log(data);
+    };
 
     // Send current active user
     socket.emit("getUser", { ...user, isOnline: true });
@@ -39,11 +47,15 @@ export default function ChatBox() {
     // Add socket event listeners
     socket.on("online", handleOnline);
     socket.on("typing", handleTyping);
+    socket.on("message", handleMessage);
+    socket.on("disconnectUser", handleDisconnect);
 
     // Clean up the event listener on component unmount
     return () => {
       socket.off("online", handleOnline);
       socket.off("typing", handleTyping);
+      socket.off("message", handleMessage);
+      socket.off("disconnectUser", handleDisconnect);
     };
   }, [user]);
 

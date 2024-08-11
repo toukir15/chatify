@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { baseApi } from "./api/baseApi";
 import authReducer from "./fetures/auth/auth.slice";
 import userReducer from "./fetures/user/user.slice";
+import messageReducer from "./fetures/message/message.slice";
 import socketReducer from "./fetures/socket/socket.slice";
 import conversationReducer from "./fetures/conversation/conversation.slice";
 import {
@@ -29,6 +30,7 @@ export const store = configureStore({
     auth: persistedReducer,
     conversation: conversationReducer,
     user: userReducer,
+    message: messageReducer,
     socket: socketReducer,
   },
   middleware: (getDefaultMiddleware) =>

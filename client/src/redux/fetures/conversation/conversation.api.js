@@ -54,19 +54,34 @@ export const conversationApi = baseApi.injectEndpoints({
           await cacheDataLoaded;
           const handleMessage = (data) => {
             updateCachedData((draft) => {
+              console.log(data);
               const newMessage = {
                 _id: "",
                 senderId: data.senderId,
                 text: data.text,
+                isSeen: data.isSeen,
+                isRemove: data.isRemove,
                 isDeleted: false,
                 createdAt: data.timestamp,
               };
               draft.data.messages.push(newMessage);
             });
           };
+          const handleDeleteForEveryone = (data) => {
+            updateCachedData((draft) => {
+              const findDeleteForEveryoneMessage = draft.data.messages.find(
+                (message) => message._id == data._id
+              );
+              if (findDeleteForEveryoneMessage) {
+                findDeleteForEveryoneMessage.isDeleted = true;
+              }
+              return draft;
+            });
+          };
 
           // Listen for 'sendMessage' events
           socket.on("message", handleMessage);
+          socket.on("deleteForEveryone", handleDeleteForEveryone);
         } catch {
           // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
           // in which case `cacheDataLoaded` will throw

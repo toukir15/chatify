@@ -6,7 +6,7 @@ import { Message } from "./message.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 
-const createMessageIntoDB = async (payload: TMessage, receiverId: string) => {
+const createMessageIntoDB = async (payload: TMessage) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
@@ -15,7 +15,7 @@ const createMessageIntoDB = async (payload: TMessage, receiverId: string) => {
 
     // Check if a conversation with the same participants already exists
     let conversation = await Conversation.findOne({
-      participants: { $all: [createMessage[0].senderId, receiverId] },
+      participants: { $all: [createMessage[0].senderId, payload.receiverId] },
     }).session(session);
 
     // If no existing conversation, create a new one
@@ -23,7 +23,7 @@ const createMessageIntoDB = async (payload: TMessage, receiverId: string) => {
       const [newConversation] = await Conversation.create(
         [
           {
-            participants: [createMessage[0].senderId, receiverId],
+            participants: [createMessage[0].senderId, payload.receiverId],
           },
         ],
         { session }
@@ -38,7 +38,7 @@ const createMessageIntoDB = async (payload: TMessage, receiverId: string) => {
       );
 
       await User.findByIdAndUpdate(
-        receiverId,
+        payload.receiverId,
         { $addToSet: { conversation: conversation._id } },
         { new: true, session }
       );
