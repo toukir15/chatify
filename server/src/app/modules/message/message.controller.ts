@@ -17,7 +17,13 @@ const createMessage = catchAsync(async (req, res, next) => {
 
 const deleteMessage = catchAsync(async (req, res, next) => {
   const messageId = req.params.messageId;
-  const result = await MessageServices.deleteMessageFromDB(messageId);
+  const query = req.query;
+  const userId = req.user._id;
+  const result = await MessageServices.deleteMessageFromDB(
+    messageId,
+    userId,
+    query
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

@@ -54,7 +54,10 @@ export const messageApi = baseApi.injectEndpoints({
                 const newMessage = {
                   _id: "",
                   senderId: messageData.senderId,
+                  receiverId: messageData.receiverId,
                   text: messageData.text,
+                  isSeen: messageData.isSeen,
+                  isRemove: messageData.isRemove,
                   isDeleted: false,
                   createdAt: timestamp,
                 };
@@ -73,32 +76,74 @@ export const messageApi = baseApi.injectEndpoints({
         } catch (error) {
           getAllConversationPatchResult?.undo();
           getConversationPatchResult?.undo();
-          toast.error("Internal server error");
         }
       },
       invalidatesTags: ["Conversation"],
     }),
     deleteMessage: builder.mutation({
-      query: (payload) => ({
-        url: `/messages/${payload._id}`,
-        method: "DELETE",
-      }),
+      query: (payload) => {
+        const params = new URLSearchParams();
+        if (payload?.isDeleted) {
+          params.append("isDeleted", true);
+        } else if (payload?.isRemove) {
+          params.append("isRemove", true);
+        }
+        return {
+          url: `/messages/${payload.message._id}?${params.toString()}`,
+          method: "DELETE",
+        };
+      },
       async onQueryStarted(payload, { queryFulfilled, dispatch }) {
         // let getConversationPatchResult;
         try {
-          await queryFulfilled;
+          const result = await queryFulfilled;
+          console.log(result);
 
+          // Update messages cache
+          dispatch(
+            conversationApi.util.updateQueryData(
+              "getConversation",
+              payload.message.conversationId,
+              (draft) => {
+                const findDeleteForEveryoneMessage = draft.data.messages.find(
+                  (message) => message._id == payload.message._id
+                );
+                if (result.data.data.isDeleted) {
+                  findDeleteForEveryoneMessage.isDeleted = true;
+                } else {
+                  findDeleteForEveryoneMessage.isRemove[payload.userId] = true;
+                }
+
+                return draft;
+              }
+            )
+          );
+        } catch (error) {
+          toast.error("Internal server error");
+        }
+      },
+    }),
+    editMessage: builder.mutation({
+      query: (payload) => ({
+        url: `/messages/${payload._id}`,
+        method: "PATCH",
+        body: { newMessage: payload.message },
+      }),
+      async onQueryStarted(payload, { queryFulfilled, dispatch }) {
+        try {
+          await queryFulfilled;
           // Update messages cache
           dispatch(
             conversationApi.util.updateQueryData(
               "getConversation",
               payload.conversationId,
               (draft) => {
-                const findDeleteForEveryoneMessage = draft.data.messages.find(
+                const findEditedMessage = draft.data.messages.find(
                   (message) => message._id == payload._id
                 );
-                if (findDeleteForEveryoneMessage) {
-                  findDeleteForEveryoneMessage.isDeleted = true;
+                if (findEditedMessage) {
+                  findEditedMessage.isEdited = true;
+                  findEditedMessage.text = payload.message;
                 }
                 return draft;
               }
@@ -112,4 +157,8 @@ export const messageApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useSendMessageMutation, useDeleteMessageMutation } = messageApi;
+export const {
+  useSendMessageMutation,
+  useDeleteMessageMutation,
+  useEditMessageMutation,
+} = messageApi;

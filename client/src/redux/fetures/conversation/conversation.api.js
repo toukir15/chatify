@@ -54,9 +54,8 @@ export const conversationApi = baseApi.injectEndpoints({
           await cacheDataLoaded;
           const handleMessage = (data) => {
             updateCachedData((draft) => {
-              console.log(data);
               const newMessage = {
-                _id: "",
+                _id: "commingsoon",
                 senderId: data.senderId,
                 text: data.text,
                 isSeen: data.isSeen,

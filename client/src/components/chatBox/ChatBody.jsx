@@ -12,7 +12,10 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { IoIosCloseCircleOutline } from "react-icons/io";
-import { setEditMessage } from "../../redux/fetures/message/message.slice";
+import {
+  setEditMessage,
+  setMessageBoxHeight,
+} from "../../redux/fetures/message/message.slice";
 import { MdModeEdit } from "react-icons/md";
 import { IoCheckmarkDoneOutline } from "react-icons/io5";
 import { HiMiniNoSymbol } from "react-icons/hi2";
@@ -33,8 +36,11 @@ export default function ChatBody({
   const [selectedMessageId, setSelectedMessageId] = useState(null);
   const [replyMessage, setReplyMessage] = useState(null);
   const editMessage = useSelector((state) => state.message.editMessage);
-  const [height, setHeight] = useState("calc(100vh - 135px)");
   const user = useSelector((state) => state.auth.user);
+  const messageBoxHeight = useSelector(
+    (state) => state.message.messageBoxHeight
+  );
+
   // message copy fn
   const copyToClipboard = (text) => {
     navigator.clipboard
@@ -59,8 +65,13 @@ export default function ChatBody({
 
   // message delete fn
   const handleDeleteForEveryone = (message) => {
-    deleteMessage(message);
+    deleteMessage({ message, isDeleted: true });
     socket.emit("deleteForEveryone", message);
+  };
+
+  // message delete for me fn
+  const handleDeleteForMe = (message) => {
+    deleteMessage({ message, userId: user._id, isRemove: true });
   };
 
   // message reply fn
@@ -72,12 +83,12 @@ export default function ChatBody({
   // message reply close fn
   const handleReplyClose = useCallback(() => {
     setReplyMessage(null);
-    setHeight("calc(100vh - 135px)");
+    dispatch(setMessageBoxHeight("calc(100vh - 135px)"));
   }, []);
 
   const handleEditClose = useCallback(() => {
     dispatch(setEditMessage(null));
-    setHeight("calc(100vh - 135px)");
+    dispatch(setMessageBoxHeight("calc(100vh - 135px)"));
   }, [dispatch]);
 
   // intially scroll bottom
@@ -86,7 +97,7 @@ export default function ChatBody({
     if (container) {
       container.scrollTop = container.scrollHeight;
     }
-  }, [conversationData]);
+  }, []);
 
   useEffect(() => {
     const replyBox = replyBoxRef.current;
@@ -96,13 +107,13 @@ export default function ChatBody({
       const handleResize = () => {
         const replyBoxHeight = replyBox.clientHeight;
         const newChatHeight = `calc(100vh - ${135 + replyBoxHeight}px)`;
-        setHeight(newChatHeight);
+        dispatch(setMessageBoxHeight(newChatHeight));
       };
 
       if (replyMessage) {
         handleResize();
       } else {
-        setHeight("calc(100vh - 135px)");
+        dispatch(setMessageBoxHeight("calc(100vh - 135px)"));
       }
 
       window.addEventListener("resize", handleResize);
@@ -119,13 +130,13 @@ export default function ChatBody({
       const handleResize = () => {
         const editBoxHeight = editBox.clientHeight;
         const newEditBoxheight = `calc(100vh - ${135 + editBoxHeight}px)`;
-        setHeight(newEditBoxheight);
+        dispatch(setMessageBoxHeight(newEditBoxheight));
       };
 
       if (editBox) {
         handleResize();
       } else {
-        setHeight("calc(100vh - 135px)");
+        dispatch(setMessageBoxHeight("calc(100vh - 135px)"));
       }
       window.addEventListener("resize", handleResize);
       return () => window.removeEventListener("resize", handleResize);
@@ -154,89 +165,123 @@ export default function ChatBody({
       {conversationId && !conversationUser && (
         <div
           ref={containerRef}
-          style={{ height: height }}
+          style={{ height: messageBoxHeight }}
           className="custom-scrollbar overflow-y-scroll py-2 px-4"
         >
           {conversationData?.data?.messages?.map((message) => {
+            const {
+              senderId,
+              createdAt,
+              isDeleted,
+              isEdited,
+              text,
+              isSeen,
+              isRemove,
+              _id,
+            } = message;
             return (
-              <div key={message._id} data-id={message.text}>
-                {!message.isRemove[user._id] && (
+              <div key={_id} data-id={text}>
+                {!isRemove[user?._id] && (
                   <div>
                     <div className="text-center text-gray-600 text-sm">
-                      {formatMessageTime(message.createdAt)}
+                      {formatMessageTime(createdAt)}
                     </div>
+
+                    {/* message start  */}
                     <div
                       className={`flex ${
-                        user?._id === message?.senderId && "justify-end"
+                        user?._id === senderId && "justify-end"
                       } `}
                     >
                       <div
                         className={`${
-                          user?._id === message?.senderId
+                          user?._id === senderId
                             ? "bg-[#8FEABC] text-black"
                             : "bg-gray-100 text-black"
                         } py-[6px] pl-4 ${
-                          user?._id === message?.senderId
-                            ? "pr-[86px]"
+                          user?._id === senderId
+                            ? isEdited && !isDeleted
+                              ? "pr-[120px]"
+                              : "pr-[86px]"
                             : "pr-16"
                         }  mt-1 max-w-[50%] rounded-lg relative flex group`}
                       >
-                        {!message.isDeleted && <p>{message.text}</p>}
-                        {message.isDeleted && (
+                        {/* message text  */}
+                        {!isDeleted && <p>{text}</p>}
+
+                        {/* deleted status  */}
+                        {isDeleted && (
                           <p className="text-gray-500 flex items-center py-[2px] gap-1">
                             <span>
                               <HiMiniNoSymbol />
                             </span>
                             <span className="text-sm">
                               {`${
-                                user?._id === message?.senderId
-                                  ? "You"
-                                  : `${reciverProfile.firstName}`
-                              }`}{" "}
+                                user?._id === senderId
+                                  ? "You "
+                                  : `${reciverProfile.firstName} `
+                              }`}
                               deleted this message.
                             </span>
                           </p>
                         )}
+
                         <div className="flex">
+                          {/* edited status  */}
+                          {isEdited && !isDeleted && (
+                            <p
+                              className={`absolute ${
+                                user?._id === senderId && !isDeleted
+                                  ? "right-[80px]"
+                                  : "right-3"
+                              } text-[10px] bottom-[3px] text-gray-500  `}
+                            >
+                              Edited
+                            </p>
+                          )}
+
+                          {/* message time  */}
                           <p
                             className={`absolute ${
-                              user?._id === message?.senderId &&
-                              !message.isDeleted
+                              user?._id === senderId && !isDeleted
                                 ? "right-[30px]"
                                 : "right-3"
                             } text-[10px] bottom-[3px] text-gray-500  `}
                           >
-                            {formatHourMinute(message.createdAt)}
+                            {formatHourMinute(createdAt)}
                           </p>
-                          {user?._id === message?.senderId &&
-                            !message.isDeleted && (
-                              <p
-                                className={`absolute text-[17px] bottom-[3px] text-gray-500 right-1 ${
-                                  message.isSeen[user._id]
-                                    ? "text-blue-700"
-                                    : "text-gray-400"
-                                }`}
-                              >
-                                <IoCheckmarkDoneOutline />
-                              </p>
-                            )}
+
+                          {/* seen unseen status  */}
+                          {user?._id === senderId && !isDeleted && (
+                            <p
+                              className={`absolute text-[17px] bottom-[3px] text-gray-500 right-1 ${
+                                isSeen[user._id]
+                                  ? "text-blue-700"
+                                  : "text-gray-400"
+                              }`}
+                            >
+                              <IoCheckmarkDoneOutline />
+                            </p>
+                          )}
                         </div>
-                        {!message.isDeleted && (
+
+                        {/* message options  */}
+                        {!isDeleted && (
                           <Tippy
                             content={
                               <div className="bg-white rounded text-xs w-[175px]">
-                                {message.senderId == user._id ||
-                                  (message.isSeen[user._id] && (
-                                    <button
-                                      onClick={() => handleMessageEdit(message)}
-                                      className="flex items-center gap-1 px-1 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full rounded text-start"
-                                    >
-                                      <span>
-                                        <FaRegEdit />
-                                      </span>
-                                      <span>Edit</span>
-                                    </button>
-                                  ))}
+                                {(message.senderId == user._id ||
+                                  message.isSeen[user._id]) && (
+                                  <button
+                                    onClick={() => handleMessageEdit(message)}
+                                    className="flex items-center gap-1 px-1 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full rounded text-start"
+                                  >
+                                    <span>
+                                      <FaRegEdit />
+                                    </span>
+                                    <span>Edit</span>
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => copyToClipboard(message.text)}
                                   className="flex items-center gap-1 px-1 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full rounded text-start"
@@ -257,7 +302,7 @@ export default function ChatBody({
                                 </button>
                                 <button
                                   onClick={() => {
-                                    // handleDeleteForEveryone(message);
+                                    handleDeleteForMe(message);
                                   }}
                                   className="flex items-center gap-1 px-1 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full rounded text-start"
                                 >
@@ -312,6 +357,7 @@ export default function ChatBody({
                         )}
                       </div>
                     </div>
+                    {/* message end  */}
                   </div>
                 )}
               </div>

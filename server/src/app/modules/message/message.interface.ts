@@ -12,4 +12,10 @@ export interface TMessage {
     [key: string]: boolean;
   };
   isDeleted?: boolean;
+  isEdited?: boolean;
+}
+
+export interface TMessageDeleteQuery {
+  isDeleted?: boolean;
+  isRemove?: boolean;
 }

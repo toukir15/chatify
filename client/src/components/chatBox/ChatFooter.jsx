@@ -1,11 +1,18 @@
 /* eslint-disable react/prop-types */
 import { useDispatch, useSelector } from "react-redux";
-import { useSendMessageMutation } from "../../redux/fetures/message/message.api";
+import {
+  useEditMessageMutation,
+  useSendMessageMutation,
+} from "../../redux/fetures/message/message.api";
 import { socket } from "../../socket";
 import { LuSendHorizonal } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { setConversationId } from "../../redux/fetures/conversation/conversation.slice";
 import { setConversationUser } from "../../redux/fetures/user/user.slice";
+import {
+  setEditMessage,
+  setMessageBoxHeight,
+} from "../../redux/fetures/message/message.slice";
 
 export default function ChatFooter({
   conversationUser,
@@ -14,19 +21,20 @@ export default function ChatFooter({
 }) {
   const [message, setMessage] = useState("");
   const user = useSelector((state) => state.auth.user);
-  const editMessage = useSelector((state) => state.message.editMessage);
+  const editMessageData = useSelector((state) => state.message.editMessage);
   const dispatch = useDispatch();
   const [sendMessage] = useSendMessageMutation();
+  const [editMessage] = useEditMessageMutation();
   const reciverProfile = conversationData?.data.reciverProfile;
 
   // Update message state when editMessage changes
   useEffect(() => {
-    if (editMessage) {
-      setMessage(editMessage.text || "");
+    if (editMessageData) {
+      setMessage(editMessageData.text || "");
     } else {
       setMessage("");
     }
-  }, [editMessage]);
+  }, [editMessageData]);
 
   const handleAddNewSendMessage = async (e) => {
     e.preventDefault();
@@ -93,6 +101,19 @@ export default function ChatFooter({
     setMessage("");
   };
 
+  const handleEditMessage = async (e) => {
+    e.preventDefault();
+    const messageText = e.target.message.value;
+    editMessage({
+      _id: editMessageData._id,
+      message: messageText,
+      conversationId: editMessageData.conversationId,
+    });
+    dispatch(setMessageBoxHeight("calc(100vh - 135px)"));
+    dispatch(setEditMessage(null));
+    setMessage("");
+  };
+
   useEffect(() => {
     if (reciverProfile) {
       socket.emit("typing", {
@@ -126,7 +147,7 @@ export default function ChatFooter({
       )}
 
       {/* Existing send message */}
-      {conversationId && !conversationUser && !editMessage && (
+      {conversationId && !conversationUser && !editMessageData && (
         <form
           onSubmit={handleExistingSendMessage}
           className="pl-4 flex gap-3 relative"
@@ -147,11 +168,8 @@ export default function ChatFooter({
       )}
 
       {/* Edit send message */}
-      {editMessage && (
-        <form
-          onSubmit={handleExistingSendMessage}
-          className="pl-4 flex gap-3 relative"
-        >
+      {editMessageData && (
+        <form onSubmit={handleEditMessage} className="pl-4 flex gap-3 relative">
           <input
             onChange={(e) => setMessage(e.target.value)}
             value={message} // Use controlled input

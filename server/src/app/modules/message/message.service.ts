@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { Conversation } from "../conversation/conversation.model";
 import { User } from "../user/user.model";
-import { TMessage } from "./message.interface";
+import { TMessage, TMessageDeleteQuery } from "./message.interface";
 import { Message } from "./message.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
@@ -73,28 +73,28 @@ const createMessageIntoDB = async (payload: TMessage) => {
   }
 };
 
-const deleteMessageFromDB = async (messageId: string) => {
-  const session = await mongoose.startSession();
-  try {
-    session.startTransaction();
-
-    // check message exist or not
-    const findMessage = await Message.findById(messageId);
-    if (!findMessage) {
-      throw new AppError(httpStatus.BAD_REQUEST, "Message does not exist!");
-    }
-
-    const result = await Message.findByIdAndUpdate(
-      messageId,
-      {
-        isDeleted: true,
-      },
-      { new: true }
-    );
-    return result;
-  } catch (error) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Something went wrong!");
+const deleteMessageFromDB = async (
+  messageId: string,
+  userId: string,
+  query: TMessageDeleteQuery
+) => {
+  // check message exist or not
+  const findMessage = await Message.findById(messageId);
+  if (!findMessage) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Message does not exist!");
   }
+
+  let queryOption;
+  if (query?.isDeleted) {
+    queryOption = { isDeleted: true };
+  } else if (query?.isRemove) {
+    queryOption = { [`isRemove.${userId}`]: true };
+  }
+
+  const result = await Message.findByIdAndUpdate(messageId, queryOption, {
+    new: true,
+  });
+  return result;
 };
 
 const updateMessageIntoDB = async (messageId: string, newMessage: string) => {
@@ -102,6 +102,7 @@ const updateMessageIntoDB = async (messageId: string, newMessage: string) => {
     messageId,
     {
       text: newMessage,
+      isEdited: true,
     },
     { new: true }
   );

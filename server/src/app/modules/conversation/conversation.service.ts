@@ -71,6 +71,7 @@ const getConversationFromDB = async (
           _id: 1,
           conversationId: 1,
           isDeleted: 1,
+          isEdited: 1,
           senderId: 1,
           receiverId: 1,
           text: 1,
