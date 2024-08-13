@@ -109,8 +109,21 @@ const updateMessageIntoDB = async (messageId: string, newMessage: string) => {
   return result;
 };
 
+const updateSeenStatusIntoDB = async (
+  conversationId: string,
+  senderId: string
+) => {
+  const result = await Message.updateMany(
+    { conversationId: conversationId, [`isSeen.${senderId}`]: { $ne: true } },
+    { $set: { [`isSeen.${senderId}`]: true } }
+  );
+  console.log(result);
+  return result;
+};
+
 export const MessageServices = {
   createMessageIntoDB,
   deleteMessageFromDB,
   updateMessageIntoDB,
+  updateSeenStatusIntoDB,
 };

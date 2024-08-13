@@ -13,6 +13,7 @@ export interface TMessage {
   };
   isDeleted?: boolean;
   isEdited?: boolean;
+  reply?: string;
 }
 
 export interface TMessageDeleteQuery {

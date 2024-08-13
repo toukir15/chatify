@@ -46,6 +46,7 @@ const getConversationFromDB = async (
         "messages.createdAt": 1,
       },
     },
+
     {
       $lookup: {
         from: "users",
@@ -65,6 +66,14 @@ const getConversationFromDB = async (
       },
     },
     {
+      $lookup: {
+        from: "messages",
+        localField: "messages.reply",
+        foreignField: "_id",
+        as: "reply",
+      },
+    },
+    {
       $project: {
         _id: 1,
         messages: {
@@ -74,6 +83,7 @@ const getConversationFromDB = async (
           isEdited: 1,
           senderId: 1,
           receiverId: 1,
+          reply: 1,
           text: 1,
           isSeen: 1,
           isRemove: 1,

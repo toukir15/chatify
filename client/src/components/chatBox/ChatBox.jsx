@@ -1,11 +1,12 @@
 import { useSelector } from "react-redux";
 import { useGetConversationQuery } from "../../redux/fetures/conversation/conversation.api";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import logo from "/chat.png";
 import { socket } from "../../socket";
 import ChatHeader from "./ChatHeader";
 import ChatBody from "./ChatBody";
 import ChatFooter from "./ChatFooter";
+import { useSeenMessageMutation } from "../../redux/fetures/message/message.api";
 
 export default function ChatBox() {
   const [isTyping, setIsTyping] = useState(false);
@@ -13,11 +14,13 @@ export default function ChatBox() {
     (state) => state.conversation.conversationId
   );
   const [socketOnlineUsers, setSocketOnlineUsers] = useState([]);
+  const [seenMessage] = useSeenMessageMutation();
+  const messageBoxRef = useRef(null);
+
   const user = useSelector((state) => state.auth.user);
   const conversationUser = useSelector((state) => state.user.conversationUser);
   const { data: conversationData, isLoading: isConversationDataLoading } =
     useGetConversationQuery(conversationId);
-  const [socketMessage, setSocketMessage] = useState(null);
 
   const reciverProfile = conversationData?.data.reciverProfile;
   const findOnlineReciverProfile = socketOnlineUsers.find(
@@ -34,7 +37,25 @@ export default function ChatBox() {
       setIsTyping(data.isTyping);
     };
     const handleMessage = (data) => {
-      setSocketMessage(data);
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            console.log("Message box is visible");
+            console.log(data);
+            seenMessage({
+              conversationId: data.conversationId,
+              senderId: data.senderId,
+            });
+          } else {
+            console.log("Message box is not visible");
+          }
+        },
+        { threshold: 0.1 }
+      );
+
+      if (messageBoxRef.current) {
+        observer.observe(messageBoxRef.current);
+      }
     };
 
     const handleDisconnect = (data) => {
@@ -82,6 +103,7 @@ export default function ChatBox() {
               conversationData={conversationData}
               reciverProfile={reciverProfile}
               isConversationDataLoading={isConversationDataLoading}
+              messageBoxRef={messageBoxRef}
             />
           </>
 

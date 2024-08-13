@@ -12,6 +12,8 @@ import { setConversationUser } from "../../redux/fetures/user/user.slice";
 import {
   setEditMessage,
   setMessageBoxHeight,
+  setReplyMessage,
+  setScrollBottom,
 } from "../../redux/fetures/message/message.slice";
 
 export default function ChatFooter({
@@ -22,6 +24,8 @@ export default function ChatFooter({
   const [message, setMessage] = useState("");
   const user = useSelector((state) => state.auth.user);
   const editMessageData = useSelector((state) => state.message.editMessage);
+  const replyMessage = useSelector((state) => state.message.replyMessage);
+  const scrollBottom = useSelector((state) => state.message.scrollBottom);
   const dispatch = useDispatch();
   const [sendMessage] = useSendMessageMutation();
   const [editMessage] = useEditMessageMutation();
@@ -80,6 +84,10 @@ export default function ChatFooter({
         [reciverProfile._id]: false,
       },
     };
+
+    if (replyMessage) {
+      messageData.reply = replyMessage._id;
+    }
     const now = new Date();
     const timestamp = now.toISOString();
     const receiverId = reciverProfile._id;
@@ -89,7 +97,12 @@ export default function ChatFooter({
       conversationId,
     });
     if (response.data?.success) {
-      socket.emit("message", { ...messageData, receiverId, timestamp });
+      socket.emit("message", {
+        ...messageData,
+        receiverId,
+        timestamp,
+        conversationId,
+      });
       socket.emit("conversation", {
         ...messageData,
         conversationId,
@@ -97,8 +110,11 @@ export default function ChatFooter({
         timestamp,
       });
       socket.emit("typing", { id: reciverProfile._id, isTyping: false });
+      setMessage("");
+      dispatch(setReplyMessage(null));
+      dispatch(setMessageBoxHeight("calc(100vh - 135px)"));
+      dispatch(setScrollBottom(!scrollBottom));
     }
-    setMessage("");
   };
 
   const handleEditMessage = async (e) => {

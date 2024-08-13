@@ -38,6 +38,10 @@ const messageSchema = new Schema<TMessage>(
       type: Boolean,
       default: false,
     },
+    reply: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

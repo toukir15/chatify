@@ -18,7 +18,7 @@ export default function ChatPage() {
     };
   }, []);
   return (
-    <div className=" w-[1300px] mx-auto flex ">
+    <div className=" w-[1600px] mx-auto flex ">
       <div className="w-[30%] h-screen bg-[#f5f1f1]">
         <ChatSidebar />
       </div>

@@ -54,12 +54,14 @@ export const conversationApi = baseApi.injectEndpoints({
           await cacheDataLoaded;
           const handleMessage = (data) => {
             updateCachedData((draft) => {
+              const id = Math.floor(Math.random() * 20);
               const newMessage = {
-                _id: "commingsoon",
+                _id: id,
                 senderId: data.senderId,
                 text: data.text,
                 isSeen: data.isSeen,
                 isRemove: data.isRemove,
+                reply: data.reply,
                 isDeleted: false,
                 createdAt: data.timestamp,
               };

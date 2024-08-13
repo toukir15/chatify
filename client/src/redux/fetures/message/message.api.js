@@ -154,6 +154,12 @@ export const messageApi = baseApi.injectEndpoints({
         }
       },
     }),
+    seenMessage: builder.mutation({
+      query: (payload) => ({
+        url: `/messages/seen/${payload.conversationId}/${payload.senderId}`,
+        method: "PATCH",
+      }),
+    }),
   }),
 });
 
@@ -161,4 +167,5 @@ export const {
   useSendMessageMutation,
   useDeleteMessageMutation,
   useEditMessageMutation,
+  useSeenMessageMutation,
 } = messageApi;

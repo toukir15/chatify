@@ -15,6 +15,7 @@ import { IoIosCloseCircleOutline } from "react-icons/io";
 import {
   setEditMessage,
   setMessageBoxHeight,
+  setReplyMessage,
 } from "../../redux/fetures/message/message.slice";
 import { MdModeEdit } from "react-icons/md";
 import { IoCheckmarkDoneOutline } from "react-icons/io5";
@@ -27,15 +28,17 @@ export default function ChatBody({
   conversationData,
   isConversationDataLoading,
   reciverProfile,
+  messageBoxRef,
 }) {
-  const containerRef = useRef(null);
   const replyBoxRef = useRef(null);
+  const editBoxRef = useRef();
   const dispatch = useDispatch();
   const [deleteMessage] = useDeleteMessageMutation();
   const [isOptionOpen, setIsOptionOpen] = useState(false);
   const [selectedMessageId, setSelectedMessageId] = useState(null);
-  const [replyMessage, setReplyMessage] = useState(null);
   const editMessage = useSelector((state) => state.message.editMessage);
+  const replyMessage = useSelector((state) => state.message.replyMessage);
+  const scrollBottom = useSelector((state) => state.message.scrollBottom);
   const user = useSelector((state) => state.auth.user);
   const messageBoxHeight = useSelector(
     (state) => state.message.messageBoxHeight
@@ -60,7 +63,7 @@ export default function ChatBody({
   // message edit fn
   const handleMessageEdit = (data) => {
     dispatch(setEditMessage(data));
-    setReplyMessage(null);
+    dispatch(setReplyMessage(null));
   };
 
   // message delete fn
@@ -76,13 +79,13 @@ export default function ChatBody({
 
   // message reply fn
   const handleMessageReply = (data) => {
-    setReplyMessage(data);
+    dispatch(setReplyMessage(data));
     dispatch(setEditMessage(null));
   };
 
   // message reply close fn
   const handleReplyClose = useCallback(() => {
-    setReplyMessage(null);
+    dispatch(setReplyMessage(null));
     dispatch(setMessageBoxHeight("calc(100vh - 135px)"));
   }, []);
 
@@ -93,17 +96,22 @@ export default function ChatBody({
 
   // intially scroll bottom
   useEffect(() => {
-    const container = containerRef.current;
-    if (container) {
-      container.scrollTop = container.scrollHeight;
+    const messageBox = messageBoxRef.current;
+    if (messageBox) {
+      setTimeout(() => {
+        messageBox.scrollTo({
+          top: messageBox.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 100);
     }
-  }, []);
+  }, [scrollBottom]);
 
   useEffect(() => {
     const replyBox = replyBoxRef.current;
-    const container = containerRef.current;
+    const messageBox = messageBoxRef.current;
 
-    if (replyBox && container) {
+    if (replyBox && messageBox) {
       const handleResize = () => {
         const replyBoxHeight = replyBox.clientHeight;
         const newChatHeight = `calc(100vh - ${135 + replyBoxHeight}px)`;
@@ -121,12 +129,11 @@ export default function ChatBody({
     }
   }, [replyMessage]);
 
-  const editBoxRef = useRef();
   useEffect(() => {
     const editBox = editBoxRef.current;
-    const container = containerRef.current;
+    const messageBox = messageBoxRef.current;
 
-    if (editBox && container) {
+    if (editBox && messageBox) {
       const handleResize = () => {
         const editBoxHeight = editBox.clientHeight;
         const newEditBoxheight = `calc(100vh - ${135 + editBoxHeight}px)`;
@@ -156,7 +163,7 @@ export default function ChatBody({
       {/* Add new conversation UI */}
       {conversationUser && !conversationId && (
         <div
-          ref={containerRef}
+          ref={messageBoxRef}
           className="h-[calc(100vh-135px)] custom-scrollbar overflow-y-scroll py-2 px-4"
         ></div>
       )}
@@ -164,9 +171,9 @@ export default function ChatBody({
       {/* Existing conversation UI */}
       {conversationId && !conversationUser && (
         <div
-          ref={containerRef}
+          ref={messageBoxRef}
           style={{ height: messageBoxHeight }}
-          className="custom-scrollbar overflow-y-scroll py-2 px-4"
+          className="custom-scrollbar overflow-y-scroll py-2 px-16"
         >
           {conversationData?.data?.messages?.map((message) => {
             const {
@@ -177,8 +184,13 @@ export default function ChatBody({
               text,
               isSeen,
               isRemove,
+              reply,
               _id,
             } = message;
+            const findReply = conversationData?.data?.messages?.find(
+              (message) => message._id == reply
+            );
+
             return (
               <div key={_id} data-id={text}>
                 {!isRemove[user?._id] && (
@@ -198,20 +210,56 @@ export default function ChatBody({
                           user?._id === senderId
                             ? "bg-[#8FEABC] text-black"
                             : "bg-gray-100 text-black"
-                        } py-[6px] pl-4 ${
-                          user?._id === senderId
-                            ? isEdited && !isDeleted
-                              ? "pr-[120px]"
-                              : "pr-[86px]"
-                            : "pr-16"
-                        }  mt-1 max-w-[50%] rounded-lg relative flex group`}
+                        } py-[6px]   mt-1 max-w-[52%] rounded-lg relative flex group`}
                       >
                         {/* message text  */}
-                        {!isDeleted && <p>{text}</p>}
+                        {!isDeleted && (
+                          <div>
+                            {findReply && (
+                              <div
+                                className={`border-l-4 ${
+                                  findReply?.senderId == user._id
+                                    ? "border-l-green-400"
+                                    : "border-l-sky-400"
+                                }  pl-2 pr-2 py-1 text-xs bg-[#e3e5e1d0] rounded flex justify-between mx-2 cursor-pointer`}
+                              >
+                                <div>
+                                  <p
+                                    className={`${
+                                      findReply?.senderId == user._id
+                                        ? "text-green-600"
+                                        : "text-sky-400"
+                                    } `}
+                                  >
+                                    {findReply?.senderId == user._id
+                                      ? "You"
+                                      : reciverProfile?.firstName +
+                                        " " +
+                                        reciverProfile?.lastName}
+                                  </p>
+                                  <p className="text-gray-600">
+                                    {findReply?.text}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            <p
+                              className={`${
+                                user?._id === senderId
+                                  ? isEdited && !isDeleted
+                                    ? "pr-[120px]"
+                                    : "pr-[86px]"
+                                  : "pr-16"
+                              } pl-2 `}
+                            >
+                              {text}
+                            </p>
+                          </div>
+                        )}
 
                         {/* deleted status  */}
                         {isDeleted && (
-                          <p className="text-gray-500 flex items-center py-[2px] gap-1">
+                          <p className="text-gray-500 flex items-center py-[2px] gap-1 ml-2 mr-16">
                             <span>
                               <HiMiniNoSymbol />
                             </span>
@@ -219,7 +267,7 @@ export default function ChatBody({
                               {`${
                                 user?._id === senderId
                                   ? "You "
-                                  : `${reciverProfile.firstName} `
+                                  : `${reciverProfile?.firstName} `
                               }`}
                               deleted this message.
                             </span>
@@ -254,10 +302,10 @@ export default function ChatBody({
                           {/* seen unseen status  */}
                           {user?._id === senderId && !isDeleted && (
                             <p
-                              className={`absolute text-[17px] bottom-[3px] text-gray-500 right-1 ${
+                              className={`absolute text-[17px] bottom-[3px] right-1 ${
                                 isSeen[user._id]
                                   ? "text-blue-700"
-                                  : "text-gray-400"
+                                  : "text-gray-500"
                               }`}
                             >
                               <IoCheckmarkDoneOutline />

@@ -46,9 +46,24 @@ const updateMessage = catchAsync(async (req, res, next) => {
     data: result,
   });
 });
+const updateSeenStatus = catchAsync(async (req, res, next) => {
+  const conversationId = req.params.conversationId;
+  const senderId = req.params.senderId;
+  const result = await MessageServices.updateSeenStatusIntoDB(
+    conversationId,
+    senderId
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Update message seen status successfully!",
+    data: result,
+  });
+});
 
 export const MessageControllers = {
   createMessage,
   deleteMessage,
   updateMessage,
+  updateSeenStatus,
 };
