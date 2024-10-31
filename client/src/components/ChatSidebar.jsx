@@ -126,7 +126,7 @@ export default function ChatSidebar() {
       </form>
 
       {/* chat list */}
-      <div className="chatbox_scroll mt-6 overflow-y-scroll h-[810px]">
+      <div className="chatbox_scroll mt-6 overflow-y-scroll ">
         {conversationsData?.data?.conversation
           ?.slice() // Create a shallow copy of the array
           .sort(
