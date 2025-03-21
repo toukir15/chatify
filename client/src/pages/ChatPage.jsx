@@ -12,7 +12,6 @@ export default function ChatPage() {
 
     socket.on("disconnectUser", handleDisconnect);
 
-    // Clean up the event listener on component unmount
     return () => {
       socket.off("disconnectUser", handleDisconnect);
     };
