@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { formatLastSeen } from "../../utils/formatLastSeen";
+import profile from "../../../public/toukir.jpg"
 
 export default function ChatHeader({
   conversationUser,
@@ -15,13 +16,12 @@ export default function ChatHeader({
         <div className="bg-[#F5F1F1] px-8 py-3 flex items-center gap-4">
           <img
             className="w-14 h-14 rounded-full"
-            src={conversationUser.imgURL}
+            src={profile}
             alt=""
           />
           <div>
             <p className="font-medium">
-              {` ${conversationUser.firstName}
-            ${conversationUser.lastName}`}
+              {` ${conversationUser.name}`}
             </p>
             <p className="text-sm text-gray-500">
               {formatLastSeen(conversationUser.lastSeen)}
@@ -34,13 +34,13 @@ export default function ChatHeader({
         <div className="bg-[#F5F1F1] px-8 py-3 flex items-center gap-4">
           <img
             className="w-14 h-14 rounded-full"
-            src={reciverProfile.imgURL}
+            src={profile}
             alt=""
           />
           <div>
             <p className="font-medium">
-              {` ${reciverProfile.firstName}
-            ${reciverProfile.lastName}`}
+              {`
+            ${reciverProfile.name}`}
             </p>
             {findOnlineReciverProfile && !isTyping && (
               <p className="text-sm">online</p>

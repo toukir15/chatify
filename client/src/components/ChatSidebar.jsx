@@ -1,3 +1,4 @@
+/* eslint-disable react/react-in-jsx-scope */
 import { FaRegEdit } from "react-icons/fa";
 import { useState } from "react";
 import { calculateTime } from "../utils/CalculateTime";
@@ -7,6 +8,7 @@ import { useGetAllConversationsQuery } from "../redux/fetures/conversation/conve
 import { useGetUsersQuery } from "../redux/fetures/user/user.api";
 import { setConversationUser } from "../redux/fetures/user/user.slice";
 import { socket } from "../socket";
+import profile from "../../public/toukir.jpg"
 
 export default function ChatSidebar() {
   // const [isSearchbarOnFocus, setIsSearchbarOnFocus] = useState(false);
@@ -14,7 +16,6 @@ export default function ChatSidebar() {
   const [addNewOpen, setAddNewOpen] = useState(false);
   const { data: conversationsData } = useGetAllConversationsQuery(undefined);
   const { data: usersData } = useGetUsersQuery(undefined);
-
   // const handleOnFocus = () => {
   //   setIsSearchbarOnFocus(true);
   // };
@@ -33,6 +34,7 @@ export default function ChatSidebar() {
   };
 
   const handleConversationUser = (payload) => {
+    console.log(payload)
     dispatch(setConversationUser(payload));
     dispatch(setConversationId(null));
     socket.emit("online");
@@ -72,15 +74,15 @@ export default function ChatSidebar() {
           {/* add user  */}
           <div>
             {usersData?.data.map((data) => {
-              const { _id, imgURL, firstName, lastName } = data;
+              const { _id, name } = data;
               return (
                 <button
                   key={_id}
                   onClick={() => handleConversationUser(data)}
                   className="flex items-center gap-2 hover:bg-gray-100 w-full py-1 px-2 transition duration-300 "
                 >
-                  <img className="w-7 rounded-full" src={imgURL} alt="" />
-                  <p className="font-medium text-gray-800">{`${firstName} ${lastName}`}</p>
+                  <img className="w-7 rounded-full" src={profile} alt="" />
+                  <p className="font-medium text-gray-800">{`${name}`}</p>
                 </button>
               );
             })}
@@ -135,8 +137,9 @@ export default function ChatSidebar() {
               new Date(a.lastMessage.createdAt)
           )
           ?.map((conversation) => {
-            const { firstName, lastName, imgURL } =
+            const { name, imgURL } =
               conversation.participantDetails;
+              console.log(conversation.participantDetails)
             const { text, createdAt } = conversation.lastMessage;
             return (
               <button
@@ -145,11 +148,11 @@ export default function ChatSidebar() {
                 className="flex items-center bg-white py-3 px-2 rounded border-b border-[#c5c5c5] w-full"
               >
                 <div className="w-[20%]">
-                  <img className="w-14 h-14 rounded-full" src={imgURL} alt="" />
+                  <img className="w-14 h-14 rounded-full" src={profile} alt="" />
                 </div>
                 <div className="w-[80%]">
                   <div className="flex justify-between w-full">
-                    <p className="capitalize">{`${firstName} ${lastName}`}</p>
+                    <p className="capitalize">{`${name}`}</p>
                     <p className="text-sm text-gray-500">
                       {calculateTime(createdAt)}
                     </p>

@@ -30,6 +30,7 @@ export default function ChatFooter({
   const [sendMessage] = useSendMessageMutation();
   const [editMessage] = useEditMessageMutation();
   const reciverProfile = conversationData?.data.reciverProfile;
+  console.log(conversationData)
 
   // Update message state when editMessage changes
   useEffect(() => {
@@ -44,18 +45,19 @@ export default function ChatFooter({
     e.preventDefault();
     const messageText = e.target.message.value;
     const messageData = {
-      senderId: user._id,
+      senderId: user?._id,
       text: messageText,
-      receiverId: reciverProfile._id,
+      receiverId: conversationUser._id,
       isSeen: {
-        [user._id]: false,
-        [reciverProfile._id]: false,
+        [user?._id]: false,
+        [conversationUser._id]: false,
       },
       isRemove: {
-        [user._id]: false,
-        [reciverProfile._id]: false,
+        [user?._id]: false,
+        [conversationUser._id]: false,
       },
     };
+    console.log(messageData)
     const receiverId = conversationUser._id;
     const response = await sendMessage({
       messageData,

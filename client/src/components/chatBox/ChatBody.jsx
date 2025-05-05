@@ -233,9 +233,7 @@ export default function ChatBody({
                                   >
                                     {findReply?.senderId == user._id
                                       ? "You"
-                                      : reciverProfile?.firstName +
-                                        " " +
-                                        reciverProfile?.lastName}
+                                      : reciverProfile?.name}
                                   </p>
                                   <p className="text-gray-600">
                                     {findReply?.text}
@@ -267,7 +265,7 @@ export default function ChatBody({
                               {`${
                                 user?._id === senderId
                                   ? "You "
-                                  : `${reciverProfile?.firstName} `
+                                  : `${reciverProfile?.name} `
                               }`}
                               deleted this message.
                             </span>

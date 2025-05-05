@@ -8,9 +8,11 @@ import httpStatus from "http-status";
 const { ObjectId } = mongoose.Types;
 
 const createUserIntoDB = async (payload: TUser) => {
+  console.log(payload)
   const salt = bcrypt.genSaltSync(Number(config.bcrypt_salt_round));
   const hash = bcrypt.hashSync(payload?.password, salt);
   const result = await User.create({ ...payload, password: hash });
+  console.log(result)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password, ...resultObj } = result.toObject();
   return resultObj;
@@ -18,7 +20,7 @@ const createUserIntoDB = async (payload: TUser) => {
 
 const getUsersFromDB = async (userId: string) => {
   const result = await User.find({ _id: { $ne: new ObjectId(userId) } }).select(
-    { _id: 1, firstName: 1, lastName: 1, imgURL: 1, email: 1, lastSeen: 1 }
+    { _id: 1, name:1 , imgURL: 1, email: 1, lastSeen: 1 }
   );
   return result;
 };

@@ -15,7 +15,7 @@ async function main() {
     server = createServer(app);
 
     server.listen(config.port, () => {
-      console.log(`Example app listening on port ${config.port}`);
+      console.log(`Example app listening on  ${config.port}`);
     });
     initializeSocket(server);
   } catch (err) {

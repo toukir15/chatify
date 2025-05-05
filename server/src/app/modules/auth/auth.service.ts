@@ -50,6 +50,8 @@ const login = async (payload: Partial<TUser>) => {
     config.access_secret_key as string,
     config.access_expire_in as string
   );
+console.log(refreshToken, accessToken)
+
   return { refreshToken, accessToken };
 };
 

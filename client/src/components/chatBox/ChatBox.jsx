@@ -21,6 +21,7 @@ export default function ChatBox() {
   const conversationUser = useSelector((state) => state.user.conversationUser);
   const { data: conversationData, isLoading: isConversationDataLoading } =
     useGetConversationQuery(conversationId);
+     console.log(conversationData)
 
   const reciverProfile = conversationData?.data.reciverProfile;
   const findOnlineReciverProfile = socketOnlineUsers.find(

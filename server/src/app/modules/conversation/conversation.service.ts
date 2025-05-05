@@ -181,8 +181,7 @@ const getConversationsFromDB = async (currentUser: JwtPayload) => {
     {
       $group: {
         _id: "$_id",
-        firstName: { $first: "$firstName" },
-        lastName: { $first: "$lastName" },
+        name: { $first: "$name" },
         imgURL: { $first: "$imgURL" },
         email: { $first: "$email" },
         password: { $first: "$password" },
@@ -199,8 +198,7 @@ const getConversationsFromDB = async (currentUser: JwtPayload) => {
           _id: 1,
           participantDetails: {
             _id: 1,
-            firstName: 1,
-            lastName: 1,
+            name: 1,
             imgURL: 1,
           },
           lastMessage: {
