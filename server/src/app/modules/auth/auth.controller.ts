@@ -13,6 +13,12 @@ const login = catchAsync(async (req, res, next) => {
     sameSite: true,
     maxAge: 1000 * 60 * 60 * 24 * 365,
   });
+  res.cookie("accessToken", accessToken, {
+    secure: false,
+    httpOnly: true,
+    sameSite: true,
+    maxAge: 1000 * 60 * 60 * 24 * 365,
+  });
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -33,7 +39,19 @@ const refreshToken = catchAsync(async (req, res, next) => {
   });
 });
 
+const verifyToken = catchAsync(async (req, res, next) => {
+  const { accessToken } = req.cookies;
+  const result = await AuthServices.verifyToken(accessToken);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Verify token successfully",
+    data: result,
+  });
+});
+
 export const AuthControllers = {
   login,
   refreshToken,
+  verifyToken
 };

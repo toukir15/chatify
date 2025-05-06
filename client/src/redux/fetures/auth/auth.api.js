@@ -11,6 +11,14 @@ const authApi = baseApi.injectEndpoints({
         };
       },
     }),
+    verifyToken: builder.query({
+      query: () => {
+        return {
+          url: "/auth/verify-token",
+          method: "GET",
+        };
+      },
+    }),
     signup: builder.mutation({
       query: (data) => {
         return {
@@ -23,4 +31,4 @@ const authApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useLoginMutation , useSignupMutation} = authApi;
+export const { useLoginMutation , useSignupMutation, useVerifyTokenQuery} = authApi;

@@ -1,9 +1,8 @@
-import React from 'react'
+import React from "react";
+import { useVerifyTokenQuery } from "../redux/fetures/auth/auth.api";
 
-export default function ProtectedRoute() {
-    return (
-        <div>
-
-        </div>
-    )
+export default function ProtectedRoute({ children }) {
+    const {data} = useVerifyTokenQuery()
+    console.log(data)
+  return <div>{children}</div>;
 }

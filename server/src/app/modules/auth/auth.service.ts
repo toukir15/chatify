@@ -88,7 +88,13 @@ const refreshToken = async (refreshToken: string) => {
   return { accessToken };
 };
 
+const verifyToken = async (accessToken: string) => {
+  const decoded = jwt.verify(accessToken, config.access_secret_key as string);
+  console.log(decoded)
+};
+
 export const AuthServices = {
   login,
   refreshToken,
+  verifyToken
 };

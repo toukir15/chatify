@@ -117,7 +117,6 @@ const updateSeenStatusIntoDB = async (
     { conversationId: conversationId, [`isSeen.${senderId}`]: { $ne: true } },
     { $set: { [`isSeen.${senderId}`]: true } }
   );
-  console.log(result);
   return result;
 };
 
