@@ -33,6 +33,7 @@ export default function ChatSidebar() {
     socket.emit("online");
   };
 
+  // handle conversation
   const handleConversationUser = (payload) => {
     console.log(payload)
     dispatch(setConversationUser(payload));
